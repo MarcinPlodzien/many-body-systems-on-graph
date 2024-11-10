@@ -254,7 +254,7 @@ def get_matrix_representations(data, rows, cols, D):
 
 #%%
 r = 5
-h = 3
+h = 2
 
  
 G = nx.balanced_tree(r, h)
@@ -290,12 +290,9 @@ print("D_a = {:d} ".format(D_a))
 J_couplings = nx.adjacency_matrix(G).toarray()
 U_a_bare = np.ones((L,))
  
-     
-
 H_kinetic_a_elements = get_H_kinetic_term(basis_a, basis_a_Fock_idx, J_couplings, statistic_a)
- 
 H_interactions_a_elements = get_H_interactions_term(basis_a, basis_a_Fock_idx, U_a_bare, statistic_a)
- 
+
 #%% Get matrix representations
 H_ = H_kinetic_a_elements
 D = D_a
