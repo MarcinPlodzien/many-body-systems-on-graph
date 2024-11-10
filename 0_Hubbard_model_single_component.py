@@ -266,7 +266,7 @@ def get_single_body_correlator(psi, basis, basis_Fock_idx, statistic):
     
 
 #%%
-r = 4
+r = 6
 h = 2
 
  
@@ -365,22 +365,21 @@ df = pd.DataFrame(data_all)
 
 #%%
 FontSize = 20
-r = 4
-h = 2
+ 
 
 fig, ax = plt.subplots(1, 2, figsize = (14, 8))
 G = nx.balanced_tree(r, h)
 pos = nx.circular_layout(G)
 
 L = G.number_of_nodes()
-print("Number of nodes: {:d}".format(L))
+print("r = {:d}, h = {:d} | Number of nodes: {:d}".format(r, h, L))
 pos = nx.nx_agraph.graphviz_layout(G, prog="twopi", args="")
 # fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 node_size = 200
 nx.draw(G, pos, node_size=node_size, alpha=1, node_color="blue", edge_color="black", with_labels=False, ax = ax[0])
 
 ax[0].set_aspect('equal')
-ax[0].set_title(r"$L = {:d}$ nodes, N = {:d} bosons".format(L, N_a), fontsize = FontSize)
+ax[0].set_title(r"$r = {:d}, h = {:d} | L = {:d}$ nodes, N = {:d} bosons".format(r, h, L, N_a), fontsize = FontSize)
 # plt.show()
 
 
@@ -394,5 +393,7 @@ ax[0].tick_params(axis='both', which='minor', labelsize=18)
 ax[1].tick_params(axis='both', which='major', labelsize=18)
 ax[1].tick_params(axis='both', which='minor', labelsize=18)
 
-plt.savefig("conndensate_fraction.png", dpi = 400, format = "png")
+filename_params = "_r." + str(r) + "_h." + str(h)
+filename = "condensate_fraction" + filename_params + ".png"
+plt.savefig(filename, dpi = 400, format = "png")
 plt.show()
