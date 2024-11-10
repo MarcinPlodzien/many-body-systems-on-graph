@@ -13,6 +13,7 @@ from scipy.sparse.linalg import eigsh
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy.linalg as LA
 
 def generate_bosonic_basis_recursive(N, L, current_site = 0, current_state=None, basis=None):
     """
@@ -252,8 +253,20 @@ def get_H_ab_interactions_term(basis_ab, basis_ab_Fock_idx, U_ab_bare_interactio
 def get_matrix_representations(data, rows, cols, D):
     return coo_matrix((data, (rows, cols)), shape = (D, D))
 
+def get_single_body_correlator(psi, basis, basis_Fock_idx, statistic):
+    rho = np.zeros((L, L))
+    for site_k in range(0, L):
+        for site_l in range(0, L):
+            for v_ket_idx, v_ket in enumerate(basis):
+                [factor_1, w_ket] = a_op(site_k, v_ket, statistic)
+                [factor_2, w_ket] = aDag_op(site_l, w_ket, statistic)
+                w_ket_idx = basis_Fock_idx[tuple(w_ket)]
+                rho[site_k, site_l] += factor_1*factor_2*np.conj(psi[w_ket_idx])*psi[v_ket_idx]
+    return rho
+    
+
 #%%
-r = 5
+r = 4
 h = 2
 
  
@@ -313,23 +326,73 @@ H_a_int = coo_matrix((data, (rows, cols)), shape = (D, D))
 
 data_all = []
 
-U_a_vec = np.linspace(0, 10, 11)
+U_a_vec = np.linspace(0, 5, 100)
+# U_a_vec = [1]
 for U_a in U_a_vec:
     H_full = -H_a_kin + U_a/2.*H_a_int
     eigenvalues, eigenvectors = eigsh(H_full, k=2)
     E_GS = eigenvalues[0]
     psi_GS = eigenvectors[:,0]
+    rho_SPDM = np.zeros((L, L))
+    for site_k in range(0, L):
+        for site_l in range(0, L):
+            for v_ket_idx, v_ket in enumerate(basis_a):
+                [factor_1, w_ket] = a_op(site_k, v_ket, statistic_a)
+                [factor_2, w_ket] = aDag_op(site_l, w_ket, statistic_a)
+                w_ket = tuple(w_ket)
+                if(w_ket in basis_a_Fock_idx):
+                    w_ket_idx = basis_a_Fock_idx[tuple(w_ket)]
+                    rho_SPDM[site_k, site_l] += factor_1*factor_2*np.conj(psi_GS[w_ket_idx])*psi_GS[v_ket_idx]
+    rho_SPDM = rho_SPDM/np.trace(rho_SPDM)
+    evals_rho_SPDM, evecs_rho_SPDM = LA.eigh(rho_SPDM)
+    f_SF = np.max(evals_rho_SPDM)
     print(U_a)
     dict_tmp = {
-                "L"             : L,
-                "N_a"           : N_a,
-                "statistic_a"   : statistic_a,
-                "D_a"           : D_a,
-                "U_a"           : U_a,
-                "J_couplings"   : J_couplings,
-                "E_GS"          : E_GS,
-                "psi_GS"        : psi_GS                                        
+                "L"                 : L,
+                "N_a"               : N_a,
+                "statistic_a"       : statistic_a,
+                "D_a"               : D_a,
+                "U_a"               : U_a,
+                "J_couplings"       : J_couplings,
+                "E_GS"              : E_GS,
+                "psi_GS"            : psi_GS,
+                "rho_single_body"   : rho_SPDM,
+                "f_SF"              : f_SF # superfluid fraction
                 }
     data_all.append(dict_tmp)
-#%%
+
 df = pd.DataFrame(data_all)
+
+#%%
+FontSize = 20
+r = 4
+h = 2
+
+fig, ax = plt.subplots(1, 2, figsize = (14, 8))
+G = nx.balanced_tree(r, h)
+pos = nx.circular_layout(G)
+
+L = G.number_of_nodes()
+print("Number of nodes: {:d}".format(L))
+pos = nx.nx_agraph.graphviz_layout(G, prog="twopi", args="")
+# fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+node_size = 200
+nx.draw(G, pos, node_size=node_size, alpha=1, node_color="blue", edge_color="black", with_labels=False, ax = ax[0])
+
+ax[0].set_aspect('equal')
+ax[0].set_title(r"$L = {:d}$ nodes, N = {:d} bosons".format(L, N_a), fontsize = FontSize)
+# plt.show()
+
+
+ax[1].plot(df["U_a"], df["f_SF"],'-o')
+ax[1].set_ylabel("condensate fraction", fontsize = FontSize)
+ax[1].set_xlabel(r"$U/J$", fontsize = FontSize)
+
+ax[0].tick_params(axis='both', which='major', labelsize=18)
+ax[0].tick_params(axis='both', which='minor', labelsize=18)
+
+ax[1].tick_params(axis='both', which='major', labelsize=18)
+ax[1].tick_params(axis='both', which='minor', labelsize=18)
+
+plt.savefig("conndensate_fraction.png", dpi = 400, format = "png")
+plt.show()
