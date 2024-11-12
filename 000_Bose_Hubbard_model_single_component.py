@@ -182,19 +182,12 @@ rows = H_[:, 0]
 cols = H_[:, 1]
 H_a_int = get_matrix_representations(data, rows, cols, D_a)
 
- 
-#%%
-
 data_all = []
-
 U_a_vec = np.linspace(0, 20, 50)
-for U_a in U_a_vec:
-    
+for U_a in U_a_vec:  
     H_full = -H_a_kin + U_a/2.*H_a_int
     eigenvalues, eigenvectors = eigsh(H_full, k=3, which = 'SA')
     E_GS = eigenvalues[0]
-  
-    
     energy_gap =  eigenvalues[1] - eigenvalues[0]
     psi_GS = eigenvectors[:,0]
     rho_OBDM = np.zeros((L, L))                 # one-body densitym atrix rho = <GS| aDag_k a_l |GS>
