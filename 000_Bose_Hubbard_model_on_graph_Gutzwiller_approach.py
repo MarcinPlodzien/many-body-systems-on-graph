@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Nov 10 2024
+
+@author: Macin Płodzień
+"""
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
